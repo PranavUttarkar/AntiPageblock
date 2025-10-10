@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Dev Paywall Tester</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 12px;
+        width: 260px;
+      }
+      button {
+        padding: 10px 12px;
+        font-size: 14px;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 6px;
+        border: 1px solid #888;
+      }
+      .warn {
+        margin-top: 8px;
+        color: #b00;
+        font-size: 12px;
+      }
+      .ok {
+        margin-top: 8px;
+        color: green;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <button id="runBtn">Run paywall test/fix on page</button>
+      <!-- <div class="warn">Test if your sites paywall can be disabled</div> -->
+      <div id="status" class="ok"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
