@@ -438,11 +438,11 @@ const attachObserver = () => {
   } catch (e) {}
 };
 
-// Initialize enabled state from storage, then attach observer accordingly.
-chrome.storage && chrome.storage.local
-  ? chrome.storage.local.get({ enabled: false }, (items) => {
-      antiPageblockEnabled =
-        items.enabled === undefined ? false : !!items.enabled;
+// Query background for per-tab enabled state, then attach observer accordingly.
+try {
+  chrome.runtime.sendMessage({ type: "GET_TAB_ENABLED" }, (resp) => {
+    try {
+      antiPageblockEnabled = resp && resp.enabled ? true : false;
       if (antiPageblockEnabled) {
         try {
           runAll();
@@ -451,14 +451,15 @@ chrome.storage && chrome.storage.local
       try {
         attachObserver();
       } catch (e) {}
-    })
-  : (function () {
-      antiPageblockEnabled = false;
-      try {
-        runAll();
-        attachObserver();
-      } catch (e) {}
-    })();
+    } catch (e) {}
+  });
+} catch (e) {
+  // fallback: keep disabled and attach observer (observer will noop because runAll is gated)
+  antiPageblockEnabled = false;
+  try {
+    attachObserver();
+  } catch (e) {}
+}
 
 // Periodic fallback: reattach observer if the root changed and run debounced run
 const reattachInterval = setInterval(() => {
