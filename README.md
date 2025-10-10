@@ -1,5 +1,7 @@
 # Dev Paywall Tester (AntiPageblock)
 
+> NOTICE: This project is provided for educational research purposes and is intended for developers testing and debugging site behavior. It is not intended for evading paywalls on third-party content or for unlawful use. Use responsibly and only on sites you control or have permission to test.
+
 Testing only Chrome extension to test removing paywall-like overlays and restore page scrolling/visibility.
 
 ## How it works 

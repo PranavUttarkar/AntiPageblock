@@ -6,7 +6,8 @@
   "permissions": [
     "scripting",
     "activeTab",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -23,4 +24,8 @@
       "all_frames": true
     }
   ]
+  ,
+  "background": {
+    "service_worker": "background.js"
+  }
 }

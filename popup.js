@@ -1,5 +1,6 @@
 const runBtn = document.getElementById("runBtn");
 const status = document.getElementById("status");
+const enabledToggle = document.getElementById("enabledToggle");
 
 async function queryActiveTab() {
   return new Promise((resolve) => {
@@ -10,7 +11,7 @@ async function queryActiveTab() {
 }
 
 function setStatus(text, isError = false) {
-  textContent = text;
+  status.textContent = text;
   status.style.color = isError ? "#b00" : "green";
 }
 
@@ -85,4 +86,38 @@ runBtn.addEventListener("click", async () => {
     console.error("Run failed:", err);
     setStatus(err && err.message ? err.message : String(err), true);
   }
+});
+
+// Initialize toggle state from storage
+document.addEventListener("DOMContentLoaded", () => {
+  chrome.storage.local.get({ enabled: false }, (items) => {
+    const enabled = items.enabled === undefined ? false : !!items.enabled;
+    enabledToggle.checked = enabled;
+  });
+});
+
+enabledToggle.addEventListener("change", async () => {
+  const enabled = !!enabledToggle.checked;
+  // save and notify via storage change (background will broadcast)
+  chrome.storage.local.set({ enabled }, () => {
+    // try to also notify the active tab immediately so UX is snappy
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (tab && tab.id) {
+          chrome.tabs.sendMessage(
+            tab.id,
+            { type: "ANTI_PAGEBLOCK_TOGGLE", enabled },
+            () => {}
+          );
+          // If the user just disabled the extension, reload the active tab so DOM changes can be undone by a full reload
+          if (!enabled) {
+            try {
+              chrome.tabs.reload(tab.id);
+            } catch (e) {}
+          }
+        }
+      });
+    } catch (e) {}
+  });
 });

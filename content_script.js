@@ -364,7 +364,10 @@ function convertFixedToClass() {
   });
 }
 
+let antiPageblockEnabled = false;
+
 function runAll() {
+  if (!antiPageblockEnabled) return;
   removeParentOfMatches();
   replaceInlineOverflowHidden();
   unsetFixedPositions();
@@ -376,9 +379,24 @@ function runAll() {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
-  if (msg && msg.type === "run-paywall-fix") {
+  if (!msg) return;
+  if (msg.type === "run-paywall-fix") {
     runAll();
     reply({ status: "done" });
+    return;
+  }
+  if (msg.type === "ANTI_PAGEBLOCK_TOGGLE") {
+    antiPageblockEnabled = !!msg.enabled;
+    if (antiPageblockEnabled) {
+      // run once immediately when enabled
+      try {
+        runAll();
+      } catch (e) {}
+      // ensure observer is attached
+      try {
+        attachObserver();
+      } catch (e) {}
+    }
   }
 });
 
@@ -420,7 +438,27 @@ const attachObserver = () => {
   } catch (e) {}
 };
 
-attachObserver();
+// Initialize enabled state from storage, then attach observer accordingly.
+chrome.storage && chrome.storage.local
+  ? chrome.storage.local.get({ enabled: false }, (items) => {
+      antiPageblockEnabled =
+        items.enabled === undefined ? false : !!items.enabled;
+      if (antiPageblockEnabled) {
+        try {
+          runAll();
+        } catch (e) {}
+      }
+      try {
+        attachObserver();
+      } catch (e) {}
+    })
+  : (function () {
+      antiPageblockEnabled = false;
+      try {
+        runAll();
+        attachObserver();
+      } catch (e) {}
+    })();
 
 // Periodic fallback: reattach observer if the root changed and run debounced run
 const reattachInterval = setInterval(() => {
